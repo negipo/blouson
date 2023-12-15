@@ -15,7 +15,7 @@ module Blouson
     end
 
     module StatementInvalidErrorFilter
-      def initialize(message = nil, original_exception = nil, sql: nil, binds: nil)
+      def initialize(message = nil, original_exception = nil, sql: nil, binds: nil, connection_pool: nil)
         if SensitiveQueryFilter.contain_sensitive_query?(message) || (SensitiveQueryFilter.contain_sensitive_query?(sql))
           message = SensitiveQueryFilter.filter_sensitive_words(message) if message
           sql = SensitiveQueryFilter.filter_sensitive_words(sql) if sql
@@ -31,6 +31,9 @@ module Blouson
         if original_exception
           # Rails < 5.0
           super(message, original_exception)
+        elsif connection_pool
+          # Rails >= 7.1
+          super(message, sql: sql, binds: binds, connection_pool: connection_pool)
         elsif sql
           # Rails >= 6.0
           #
